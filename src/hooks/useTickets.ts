@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   createTicket as createTicketService,
   getTickets,
@@ -10,7 +10,6 @@ type UseTicketsResult = {
   tickets: Ticket[];
   loading: boolean;
   error: string | null;
-  reload: () => Promise<void>;
   createTicket: (input: TicketInput) => Promise<void>;
   updateStatus: (id: string, status: TicketStatus) => Promise<void>;
 };
@@ -20,22 +19,22 @@ export function useTickets(): UseTicketsResult {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const reload = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getTickets();
-      setTickets(data);
-    } catch {
-      setError("Could not load tickets.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    async function loadTickets() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getTickets();
+        setTickets(data);
+      } catch {
+        setError("Could not load tickets.");
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    loadTickets();
+  }, []);
 
   const createTicket = async (input: TicketInput) => {
     setError(null);
@@ -59,5 +58,5 @@ export function useTickets(): UseTicketsResult {
     }
   };
 
-  return { tickets, loading, error, reload, createTicket, updateStatus };
+  return { tickets, loading, error, createTicket, updateStatus };
 }
